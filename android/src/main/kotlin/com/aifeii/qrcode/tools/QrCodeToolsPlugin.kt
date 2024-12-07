@@ -1,7 +1,6 @@
 package com.aifeii.qrcode.tools
 
 import android.graphics.BitmapFactory
-import androidx.annotation.NonNull
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -12,7 +11,6 @@ import io.flutter.plugin.common.MethodChannel.Result
 import java.io.File
 import java.io.FileInputStream
 import java.util.*
-import kotlin.collections.ArrayList
 
 class QrCodeToolsPlugin : FlutterPlugin, MethodCallHandler {
 
@@ -22,14 +20,18 @@ class QrCodeToolsPlugin : FlutterPlugin, MethodCallHandler {
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
 
-    override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "qr_code_tools")
         channel.setMethodCallHandler(this)
     }
 
-    override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    override fun onMethodCall(call: MethodCall, result: Result) {
         if (call.method == "decoder") {
             val filePath = call.argument<String>("file")
+            if(filePath == null){
+                result.error("File path is null", null, null)
+                return
+            }
             val file = File(filePath)
             if (!file.exists()) {
                 result.error("File not found. filePath: $filePath", null, null)
@@ -56,7 +58,7 @@ class QrCodeToolsPlugin : FlutterPlugin, MethodCallHandler {
             try {
                 val decodeResult = MultiFormatReader().decode(binaryBitmap, hints)
                 result.success(decodeResult.text)
-            } catch (e: NotFoundException) {
+            } catch (_: NotFoundException) {
                 result.error("Not found data", null, null)
             }
         } else {
@@ -64,7 +66,7 @@ class QrCodeToolsPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
     }
 
